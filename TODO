@@ -1,0 +1,2 @@
+Modify the base api to make sure memoization is feasible.
+(list cant be hashed).
