@@ -258,7 +258,7 @@ def regex(pattern, action=identity):
         return Success(1+position, action(tokens[position])) if results else Failure(position, "Expecting a token matching "+pattern)
     return Parser(do_parse)
 
-def sequence(*parsers, action):
+def sequence(*parsers, action=lambda *x: x):
     """
     Generates a composite parser for a sequence of tokens.
 
