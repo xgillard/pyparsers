@@ -19,6 +19,50 @@ from builtins import str
 #===============================================================================
 # Tokenization
 #===============================================================================
+class TokenStream:
+    """
+    A stream of token implemented as a thin wrapper around a list of element.
+     
+    Note::
+        Although you might want to implement an other (ie. more memory efficient)
+        TokenStream, you should make sure an implementation of the __hash__ 
+        method as well as some of the methods from the container protocol are 
+        available. This way, you should be able to make sure all the parsers defined
+        in the library (or the ones you define) are interoperatable with your new 
+        token stream implementation.
+    """
+    def __init__(self, tokenizer, text):
+        self._tokens = tokenizer.tokenize(text)
+        
+    def __getitem__(self, pos):
+        """
+        -- IMPLEMENTATION IS MANDATORY -- 
+        :returns: the pos-th token in the stream
+        """
+        return self._tokens[pos]
+    
+    def __len__(self):
+        """
+        -- IMPLEMENTATION IS MANDATORY --
+        :returns: the length of the stream
+        """
+        return len(self._tokens)
+    
+    def __contains__(self, token):
+        """
+        -- IMPLEMENTATION IS FACULTATIVE --
+        :returns: True iff the token is part of the stream
+        """
+        return token in self._tokens
+    
+    def __iter__(self):
+        """
+        -- IMPLEMENTATION IS FACULTATIVE --
+        Iterates over the stream of tokens
+        """
+        return iter( self._tokens )
+    
+    
 class Tokenizer:
     """
     A configurable tokenizer that lets you decide what should be considered whitespace
@@ -366,6 +410,36 @@ def list_of(rule, sep=",", action=identity):
 #===============================================================================
 #
 #===============================================================================
+def memoize(fn):
+    """
+    Decorator that memoizes the results of the function calls. 
+    This is pretty useful if you intend to implement a packrat parser.
+    """
+    # Define the memoizing map if needed
+    if not hasattr(fn, "__memo"):
+        fn.__memo = {}
+    # Decorate the function
+    def memoized(*args, **kwargs):
+        key = (*args, *kwargs)
+        if not key in fn.__memo :
+            #===================================================================
+            # It could be useful to investigate the paper by Warth, Douglass, 
+            # Millstein and see how it could be implemented to support left rec.
+            #
+            # In the meantime, I do believe it is better to just fail with 
+            # infinite left rec. than letting the user believe it is all nice 
+            # and well when it turns out not to be in the reality.
+            #===================================================================
+            # Following line is an attempt that offers a ltd kind of support I 
+            # prefer not to use (because it would give a false impression).
+            #
+            # fn.__memo[key] = Failure(-1, "Infinite recursion")
+            #===================================================================
+            fn.__memo[key] = fn(*args, *kwargs)
+        return fn.__memo[key]
+    # Return the decorated function
+    return memoized
+
 def parser(fn):
     """Wraps a function to make it a parser (useful to implement recursive call)"""
     return Parser(fn)
@@ -379,7 +453,7 @@ def parse_all(text, axiom, tokenizer=Tokenizer()):
     :return: the value corresponding to a successful parse of the text
     :raises: an exception if not all text could be parsed
     """
-    tokens       = tokenizer.tokenize(text)
+    tokens       = TokenStream( tokenizer, text )
     parse_result = axiom(tokens)
     # Check possible failures
     if not parse_result.success():
