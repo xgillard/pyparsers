@@ -31,10 +31,12 @@ class Tokenizer:
     def whitespace(self, expr):
         """What is considered blank text"""
         self._whitespace = expr
+        return self
 
     def puctuation(self, *ops):
         """The 'punctuation' of the language (may connect two other tokens)"""
         self._punctuation = "|".join(ops)
+        return self
 
     def tokenize(self, text):
         """
@@ -183,13 +185,12 @@ class Parser:
             return Failure(position, "Reached end of token stream")
         return self._fn(tokens, position)
 
-    def then(self, other, action=identity):
+    def then(self, other, action=lambda x,y: (x,y)):
         """
         Combines this parser with an other one to return a new parser that recognizes this content followed
         by the content recognized by the other parser
         """
-        other = other if isinstance(other, Parser) else Parser(other)
-        return sequence(self._fn, other, action)
+        return sequence(self._fn, other, action=action)
 
     def alt(self, other, action=identity):
         """
