@@ -335,6 +335,33 @@ def optional(rule, action=identity):
 
     return do_parse
 
+def list_of(rule, sep=",", action=identity):
+    """
+    Generates a parser for the case when you want to parse a list of items 
+    separated by a token (or rule) of your choice.
+    
+    Note:: 
+        The parse list has *necessarily* the following structure:
+        rule sep rule sep rule sep ... rule
+    
+    Example::
+        list_of( regex("[a-z]+") ) will recognise sequence of tokens like
+        `a, b, c` but not like `a, b, c, ` or `a b c` 
+    
+    Although many other implementations are possible, this feature was included
+    simply because parsing lists of items is a very common use case. Therefore
+    it was considered useful to free developers from developing their own 
+    list parsing utility function.
+    
+    :param rule: the rule parsing items in the list
+    :param sep: the rule describing the separation between items
+    :param action: the action to be applied on the parsed list of elements
+    """
+    def do_parse(tokens, position=0):
+        leading = repeat( sequence( rule, sep, action=lambda x,_: x) )
+        the_pars= leading.then(rule, action=lambda x, y: x+[y])
+        return the_pars(tokens, position).transform(action)
+    return do_parse
 
 #===============================================================================
 #
