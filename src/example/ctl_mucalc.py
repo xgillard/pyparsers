@@ -19,7 +19,7 @@ class CTL:
     def tokenizer(self):
         """The tokenizer: recognizes a few special chars"""
         tok = Tokenizer()
-        tok.puctuation(r"!", r"&", r"\|", r"\(", r"\)", r"\[", r"\]")
+        tok.punctuation(r"!", r"&", r"\|", r"\(", r"\)", r"\[", r"\]")
         return tok
     
     def atomic_prop(self, tokens, position=0):
