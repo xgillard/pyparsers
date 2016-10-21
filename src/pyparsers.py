@@ -77,7 +77,7 @@ class Tokenizer:
         self._whitespace = expr
         return self
 
-    def puctuation(self, *ops):
+    def punctuation(self, *ops):
         """The 'punctuation' of the language (may connect two other tokens)"""
         self._punctuation = "|".join(ops)
         return self
@@ -219,15 +219,16 @@ class Parser:
     An actual parser object that can be combined with some other parser to build more advanced
     grammars
     """
-    def __init__(self, fn):
+    def __init__(self, fn, action=identity):
         """Creates a new object and remembers the function being decorated"""
-        self._fn     = fn if not isinstance(fn, str) else text(fn)
+        self._fn  = fn if not isinstance(fn, str) else text(fn)
+        self._act = action
 
     def __call__(self, tokens, position=0):
         """Executes the underlying function"""
         if position >= len(tokens):
             return Failure(position, "Reached end of token stream")
-        return self._fn(tokens, position)
+        return self._fn(tokens, position).transform(self._act)
 
     def then(self, other, action=lambda x,y: (x,y)):
         """
@@ -245,14 +246,10 @@ class Parser:
 
         def choice(tokens, position=0):
             """Internal function to recognize either one or the other content"""
-            me  = self._fn(tokens, position)
-            if me.success():
-                return me.transform(action)
-
-            # return the result transformed as necessary
-            return other(tokens, position).transform(action)
+            me  = self(tokens, position)
+            return me if me.success() else other(tokens, position)
         # The parser result
-        return Parser(choice)
+        return Parser(choice, action)
 
     def __add__(self, other):
         """Allows the sequential combination of parsers in a symbolic fashion"""
@@ -261,6 +258,39 @@ class Parser:
     def __or__(self, other):
         """Allows the alternative combination of parsers in a symbolic fashion"""
         return self.alt(other)
+    
+    def action(self, action):
+        """
+        Updates the internal action of the parser to use `action` instead.
+        """
+        self._act = action
+
+
+class VariadicActionParser(Parser):
+    """
+    A parser implementation that accepts variadic actions. That is to say, a parser
+    producing a list or tuple that will be broken down to several parts before being
+    passed to the action function.
+    
+    The typical use for this class lies in the implementation of the `sequence`: as
+    every other parser builder, it returns a parser whose action can be parameterized
+    but it makes sure that the given action receives a series of arguments rather than
+    a list.   
+    """
+    def __init__(self, rule, action):
+        """
+        Creates a new instance and makes sure the action is called with args
+        instead of a list.
+        """
+        super().__init__(rule, lambda x: action(*x))
+    
+    def action(self, action):
+        """
+        Replaces the internal action and makes sure the action is called with args
+        instead of a list.
+        """
+        #self._act = lambda x: action(*x)
+        super().action(lambda x: action(*x))
 
 
 #===============================================================================
@@ -277,9 +307,9 @@ def text(text, action=identity):
             return Success(position + 1, text)
         else:
             return Failure(position, "Expected {} instead of {}".format(text, tokens[position]))
-    return Parser(do_parse)
+    return Parser(do_parse, action)
 
-def one_of(enumerated, action=identity):
+def one_of(*enumerated, action=identity):
     """
     Generates a parser that recognizes one of the specified given values
     :param enumerated: the list of the values recognized by this parser.
@@ -287,10 +317,10 @@ def one_of(enumerated, action=identity):
     """
     def do_parse(tokens, position=0):
         if tokens[position] in enumerated:
-            return Success(position+1, action(tokens[position]))
+            return Success(position+1, tokens[position])
         else:
             return Failure(position, "Expecting one of the following tokens "+str(enumerated))
-    return Parser(do_parse)
+    return Parser(do_parse, action)
 
 def regex(pattern, action=identity):
     """
@@ -300,8 +330,8 @@ def regex(pattern, action=identity):
     """
     def do_parse(tokens, position=0):
         results = re.match("^"+pattern+"$", tokens[position])
-        return Success(1+position, action(tokens[position])) if results else Failure(position, "Expecting a token matching "+pattern)
-    return Parser(do_parse)
+        return Success(1+position, tokens[position]) if results else Failure(position, "Expecting a token matching "+pattern)
+    return Parser(do_parse, action)
 
 def sequence(*parsers, action=lambda *x: x):
     """
@@ -325,10 +355,8 @@ def sequence(*parsers, action=lambda *x: x):
             # else update the result and the current position.
             output.append(result.value())
             position = result.position()
-
-        return Success(position, action(*output))
-
-    return Parser(do_parse)
+        return Success(position, output)
+    return VariadicActionParser(do_parse, action)
 
 def repeat(repeated, min_occurs=0, max_occurs=float("inf"), action=identity):
     """
@@ -357,9 +385,9 @@ def repeat(repeated, min_occurs=0, max_occurs=float("inf"), action=identity):
             return Failure(position, "{} occurred {} times (maximum: {})"\
                                                     .format(repeated, res_len, max_occurs))
         else:
-            return Success(position, action(results))
+            return Success(position, results)
 
-    return Parser(do_parse)
+    return Parser(do_parse, action)
 
 def optional(rule, action=identity):
     """
@@ -372,12 +400,9 @@ def optional(rule, action=identity):
     rule = parser(rule) if not isinstance(rule, Parser) else rule
     def do_parse(tokens, position=0):
         result = rule(tokens, position)
-        if result.success():
-            return result.transform(action)
-        else:
-            return Success(position, action(None))
+        return result if result.success() else Success(position, None)
 
-    return do_parse
+    return Parser(do_parse, action)
 
 def list_of(rule, sep=",", action=identity):
     """
@@ -404,8 +429,8 @@ def list_of(rule, sep=",", action=identity):
     def do_parse(tokens, position=0):
         leading = repeat( sequence( rule, sep, action=lambda x,_: x) )
         the_pars= leading.then(rule, action=lambda x, y: x+[y])
-        return the_pars(tokens, position).transform(action)
-    return do_parse
+        return the_pars(tokens, position)
+    return Parser(do_parse, action)
 
 #===============================================================================
 #
@@ -422,20 +447,48 @@ def memoize(fn):
     def memoized(*args, **kwargs):
         key = (*args, *kwargs)
         if not key in fn.__memo :
-            #===================================================================
-            # It could be useful to investigate the paper by Warth, Douglass, 
-            # Millstein and see how it could be implemented to support left rec.
-            #
-            # In the meantime, I do believe it is better to just fail with 
-            # infinite left rec. than letting the user believe it is all nice 
-            # and well when it turns out not to be in the reality.
-            #===================================================================
-            # Following line is an attempt that offers a ltd kind of support I 
-            # prefer not to use (because it would give a false impression).
-            #
-            # fn.__memo[key] = Failure(-1, "Infinite recursion")
-            #===================================================================
             fn.__memo[key] = fn(*args, *kwargs)
+        return fn.__memo[key]
+    # Return the decorated function
+    return memoized
+
+def leftrec(fn):
+    """
+    Decorator that activates the packrat left recursion support for this function.
+    Note:: 
+        This implementation is based on the paper by Warth, Douglass and Millstein
+    """
+    # Define the memoizing map if needed
+    if not hasattr(fn, "__memo"):
+        fn.__memo = {}
+    # Decorate the function
+    def memoized(*args, **kwargs):
+        key = (*args, *kwargs)
+        if not key in fn.__memo :
+            _marker        = Failure(-1, "Prevent infinite recursion")
+            _marker._is_LR = False
+            fn.__memo[key] = _marker 
+            
+            result = fn(*args, *kwargs)
+            # do we need to grow the seed from left to right ?
+            if hasattr(fn.__memo[key], '_is_LR') and fn.__memo[key]._is_LR:
+                # LR is detected -> we need to grow it out !
+                while True:
+                    pos            = result.position()
+                    fn.__memo[key] = result
+                    ans = fn(*args, *kwargs)
+                    # was it a failure (aka, is left recursion over ?)
+                    if not ans.success():
+                        break
+                    if ans.position() <= pos:
+                        break
+                    # else the seed has grown
+                    result = ans
+            fn.__memo[key] = result         
+        elif hasattr(fn.__memo[key], '_is_LR'):
+            # this is a case of left recursion
+            fn.__memo[key]._is_LR = True
+        # anyway: when it is over, just return the parsed value ! 
         return fn.__memo[key]
     # Return the decorated function
     return memoized

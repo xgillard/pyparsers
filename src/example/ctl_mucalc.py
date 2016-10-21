@@ -19,7 +19,7 @@ class CTL:
     def tokenizer(self):
         """The tokenizer: recognizes a few special chars"""
         tok = Tokenizer()
-        tok.puctuation(r"!", r"&", r"\|", r"\(", r"\)", r"\[", r"\]")
+        tok.punctuation(r"!", r"&", r"\|", r"\(", r"\)", r"\[", r"\]")
         return tok
     
     def atomic_prop(self, tokens, position=0):
@@ -32,10 +32,9 @@ class CTL:
         phi    = parser(self.state_formula)
         atomic = parser(self.atomic_prop)                                           \
                | sequence("(", phi, ")",                action=self._act.surround)
-               
-        state  = sequence("!", phi,                     action=self._act.negation)  \
-               | sequence(atomic, "|", phi,             action=self._act._or)       \
-               | sequence(atomic, "&", phi,             action=self._act._and)      \
+        
+        # because there is no left recursion, use first and follow sets
+        tailrec= sequence("!", phi,                     action=self._act.negation)  \
                | sequence("EX", phi,                    action=self._act.ex)        \
                | sequence("EG", phi,                    action=self._act.eg)        \
                | sequence("E", "[", phi, "U", phi, "]", action=self._act.eu)        \
@@ -44,7 +43,11 @@ class CTL:
                | sequence("A", "[", phi, "U", phi, "]", action=self._act.au)        \
                | atomic
                
-        return state(tokens, position)
+        leftrec= sequence(tailrec, "|", phi,             action=self._act._or)       \
+               | sequence(tailrec, "&", phi,             action=self._act._and)      \
+               | tailrec
+
+        return leftrec(tokens, position)
     
     def interpret(self, text):
         return parse_all(text, self.state_formula, self.tokenizer())
@@ -109,5 +112,5 @@ def ctl(fairness=None):
 # The program entry point.
 #===============================================================================
 if __name__ == "__main__":
-    formula = "E[ f U g ]"
+    formula = "(E[ f U g ]) & AG o"
     print("{} === {} ".format( formula, ctl().interpret(formula) ))

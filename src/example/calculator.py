@@ -15,7 +15,7 @@ class Calculator:
 
     def tokenizer(self):
         tok = Tokenizer()
-        tok.puctuation(r"\+", r"-", r"\*", r"/", r"\^", r"%", r"\(", r"\)")
+        tok.punctuation(r"\+", r"-", r"\*", r"/", r"\^", r"%", r"\(", r"\)")
         return tok
 
     def number(self, tokens, position=0):
