@@ -447,20 +447,48 @@ def memoize(fn):
     def memoized(*args, **kwargs):
         key = (*args, *kwargs)
         if not key in fn.__memo :
-            #===================================================================
-            # It could be useful to investigate the paper by Warth, Douglass, 
-            # Millstein and see how it could be implemented to support left rec.
-            #
-            # In the meantime, I do believe it is better to just fail with 
-            # infinite left rec. than letting the user believe it is all nice 
-            # and well when it turns out not to be in the reality.
-            #===================================================================
-            # Following line is an attempt that offers a ltd kind of support I 
-            # prefer not to use (because it would give a false impression).
-            #
-            # fn.__memo[key] = Failure(-1, "Infinite recursion")
-            #===================================================================
             fn.__memo[key] = fn(*args, *kwargs)
+        return fn.__memo[key]
+    # Return the decorated function
+    return memoized
+
+def leftrec(fn):
+    """
+    Decorator that activates the packrat left recursion support.
+    Note:: 
+        This implementation is based on the paper by Warth, Douglass and Millstein
+    """
+    # Define the memoizing map if needed
+    if not hasattr(fn, "__memo"):
+        fn.__memo = {}
+    # Decorate the function
+    def memoized(*args, **kwargs):
+        key = (*args, *kwargs)
+        if not key in fn.__memo :
+            _marker        = Failure(-1, "Prevent infinite recursion")
+            _marker._is_LR = False
+            fn.__memo[key] = _marker 
+            
+            result = fn(*args, *kwargs)
+            # do we need to grow the seed from left to right ?
+            if hasattr(fn.__memo[key], '_is_LR') and fn.__memo[key]._is_LR:
+                # LR is detected
+                while True:
+                    pos            = result.position()
+                    fn.__memo[key] = result
+                    ans = fn(*args, *kwargs)
+                    
+                    if not ans.success():
+                        break
+                    if ans.position() <= pos:
+                        break
+                    # else the seed has grown
+                    result = ans
+            fn.__memo[key] = result         
+        elif hasattr(fn.__memo[key], '_is_LR'):
+            # this is a case of left recursion
+            fn.__memo[key]._is_LR = True
+        # anyway: when it is over, just return the parsed value ! 
         return fn.__memo[key]
     # Return the decorated function
     return memoized
