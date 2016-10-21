@@ -454,7 +454,7 @@ def memoize(fn):
 
 def leftrec(fn):
     """
-    Decorator that activates the packrat left recursion support.
+    Decorator that activates the packrat left recursion support for this function.
     Note:: 
         This implementation is based on the paper by Warth, Douglass and Millstein
     """
@@ -472,12 +472,12 @@ def leftrec(fn):
             result = fn(*args, *kwargs)
             # do we need to grow the seed from left to right ?
             if hasattr(fn.__memo[key], '_is_LR') and fn.__memo[key]._is_LR:
-                # LR is detected
+                # LR is detected -> we need to grow it out !
                 while True:
                     pos            = result.position()
                     fn.__memo[key] = result
                     ans = fn(*args, *kwargs)
-                    
+                    # was it a failure (aka, is left recursion over ?)
                     if not ans.success():
                         break
                     if ans.position() <= pos:
