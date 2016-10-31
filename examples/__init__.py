@@ -5,4 +5,3 @@ how one can easily develop a simple calculator language with pyparsers.
 
 Author: X. Gillard
 """
-all = ['calculator']
