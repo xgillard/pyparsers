@@ -70,11 +70,11 @@ class Tokenizer:
     """
     def __init__(self):
         self._whitespace = "\s"
-        self._punctuation= []
+        self._punctuation= "$^" # by default, no punctuation is ever matched
 
-    def whitespace(self, expr):
+    def whitespace(self, *expr):
         """What is considered blank text"""
-        self._whitespace = expr
+        self._whitespace = "|".join(expr)
         return self
 
     def punctuation(self, *ops):
