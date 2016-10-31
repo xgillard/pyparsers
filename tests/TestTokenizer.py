@@ -64,3 +64,4 @@ class TestTokenizer(unittest.TestCase):
         tested = Tokenizer().punctuation("-", "\.", ",")
         tokens = tested.tokenize(text)
         self.assertEqual(tokens, ["aa", ",", "123", "bb", ".", "456", "cc", "-", "789", "dd", ".", "-", "00"])
+        

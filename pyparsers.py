@@ -14,7 +14,7 @@ Note::
 Author: X. Gillard
 '''
 import re
-from builtins import str
+from abc import abstractmethod
 
 #===============================================================================
 # Tokenization
@@ -139,18 +139,22 @@ class ParseResult:
         """:return: the position in the stream of tokens up to which this result accounts for."""
         return self._pos
 
+    @abstractmethod
     def success(self):
         """:return: True iff this result represent a successful parse"""
         pass
-
+    
+    @abstractmethod
     def value(self):
         """:return: the value (ast node) parsed."""
         pass
-
+    
+    @abstractmethod
     def reason(self):
         """:return: the reason explaining why this parse has failed"""
         pass
 
+    @abstractmethod
     def transform(self, action):
         """
         :return: an other parse result equivalent to this one but where `action` has been applied to the value
