@@ -4,8 +4,10 @@ classes and functions defined in the pyparsers module.
 """
 from .TestTokenizer    import TestTokenizer
 from .TestTokenStream  import TestTokenStream
+from .TestParseResults import TestParseResults
 
 all = [ 
     TestTokenizer,
-    TestTokenStream
+    TestTokenStream,
+    TestParseResults
  ]

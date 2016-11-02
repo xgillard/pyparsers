@@ -184,6 +184,38 @@ class Success(ParseResult):
 
     def __str__(self):
         return "Success({}, {})".format(self.position(), self.value())
+    
+    def __eq__(self, other):
+        """
+        Two successful results are considered equal iff::
+            - both are instances of the `Success` class
+            - both ended their parse in the same position
+            - both yield recognised the same value.
+        """
+        if not (self.__can_equal(other) and other.__can_equal(self)):
+            return False
+        else:
+            return self.position() == other.position() and self.value() == other.value()
+        
+    def __hash__(self):
+        """
+        A reimplementation of the `__hash__` magic method which is consistent with the equal
+        method defined above.
+        """
+        hashcode = 17
+        hashcode = 41 * hashcode + self.position()
+        hashcode = 41 * hashcode + hash(self.value())
+        return hashcode  
+    
+    def __can_equal(self, other):
+        """
+        Utility function that returns True iff both objects can (potentially) be considered equal (typewise).
+        The role of this function is to ensure that I cannot tell that I'm equal to an instance of a subclass
+        of this class. 
+        
+        :see: http://www.artima.com/lejava/articles/equality.html
+        """
+        return isinstance(other, Success) 
 
 
 class Failure(ParseResult):
@@ -206,6 +238,38 @@ class Failure(ParseResult):
 
     def __str__(self):
         return "Failure({}, {})".format(self.position(), self.reason())
+    
+    def __eq__(self, other):
+        """
+        Two successful results are considered equal iff::
+            - both are instances of the `Success` class
+            - both ended their parse in the same position
+            - both yield recognised the same value.
+        """
+        if not (self.__can_equal(other) and other.__can_equal(self)):
+            return False
+        else:
+            return self.position() == other.position() and self.reason() == other.reason()
+        
+    def __hash__(self):
+        """
+        A reimplementation of the `__hash__` magic method which is consistent with the equal
+        method defined above.
+        """
+        hashcode = 17
+        hashcode = 41 * hashcode + self.position()
+        hashcode = 41 * hashcode + hash(self.reason())
+        return hashcode  
+    
+    def __can_equal(self, other):
+        """
+        Utility function that returns True iff both objects can (potentially) be considered equal (typewise).
+        The role of this function is to ensure that I cannot tell that I'm equal to an instance of a subclass
+        of this class. 
+        
+        :see: http://www.artima.com/lejava/articles/equality.html
+        """
+        return isinstance(other, Failure) 
 
 
 #===============================================================================
