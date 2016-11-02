@@ -3,4 +3,5 @@
 .project
 .pydevproject
 .settings/org.eclipse.core.resources.prefs
-src/test.py
+.coverage
+/htmlcov/
