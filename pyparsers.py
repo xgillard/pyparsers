@@ -483,7 +483,11 @@ def list_of(rule, sep=",", action=identity):
     
     Example::
         list_of( regex("[a-z]+") ) will recognise sequence of tokens like
-        `a, b, c` but not like `a, b, c, ` or `a b c` 
+        `a, b, c` but not like `a, b, c, ` or `a b c`
+        
+    Note::
+        Given that it tries to recognise a list of items separated with some
+        given separator, *an empty list will be rejected with a Failure*.
     
     Although many other implementations are possible, this feature was included
     simply because parsing lists of items is a very common use case. Therefore
