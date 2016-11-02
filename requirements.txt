@@ -1,0 +1,2 @@
+# pyparsers requires nothing except 're' and 'unittest' which are both
+# provided by your stock python installation.
