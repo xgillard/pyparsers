@@ -68,9 +68,9 @@ class Tokenizer:
     A configurable tokenizer that lets you decide what should be considered whitespace
     (whitespaces are dropped) and what should be considered punctuation (kept).
     """
-    def __init__(self):
-        self._whitespace = "\s"
-        self._punctuation= "$^" # by default, no punctuation is ever matched
+    def __init__(self, whitespace = "\s", punctuation="$^"):
+        self._whitespace = whitespace
+        self._punctuation= punctuation # by default, no punctuation is ever matched
 
     def whitespace(self, *expr):
         """What is considered blank text"""
@@ -578,6 +578,7 @@ def parse_all(text, axiom, tokenizer=Tokenizer()):
     :return: the value corresponding to a successful parse of the text
     :raises: an exception if not all text could be parsed
     """
+    axiom        = axiom if isinstance(axiom, Parser) else parser(axiom)
     tokens       = TokenStream( tokenizer, text )
     parse_result = axiom(tokens)
     # Check possible failures
