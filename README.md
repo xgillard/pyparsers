@@ -9,7 +9,7 @@ pursues the following two objectives:
 
 ## Usage / Examples
 Using pyparsers is fairly simple and should feel familiar if you know how to
-express grammars in BNF (And if you don't, just search Bacchus Naur Form on
+express grammars in BNF (And if you don't, just search Bachus-Naur Form on
 Wikipedia to get started).
 
 The following examples illustrate several of the possible uses of pyparsers to
@@ -72,7 +72,7 @@ Finally, what really got me into writing pyparsers was the displeasure I had whe
 facing the pyparsing handles _recursive_ grammars and _infix_ rules. Although some
 _might_ like it, I really had the feeling that the API foreseen by the library
 for these use cases were just making my code fragile (it is way too easy to create
-infinite recursion without even realizing you are doing it) and cluttered atop
+infinite recursion without even realizing you are doing it) and cluttered on top
 of being hard to understand and maintain.
 
 ## Theoretical background and references
