@@ -7,7 +7,18 @@ pursues the following two objectives:
 
 **Note: If you ask yourself about the rationale behind the development of pyparsers, just jump to the end of this page.**
 
-## Usage / Examples
+## Table of contents
+* [Usage](#usage)
+  * [Examples](#examples)
+  * [API Reference](#api-reference)
+* [Installation](#installation)
+  * [Using pip](#using-pip)
+  * [Manual installation](#manual-installation)
+* [How to contribute](#how-to-contribute)
+* [The rationale behind pyparsers](#the-rationale-behind-pyparsers)
+* [Theoretical background and references](#theoretical-background-and-references)
+
+## Usage
 Using pyparsers is fairly simple and should feel familiar if you know how to
 express grammars in BNF (And if you don't, just search Bachus-Naur Form on
 Wikipedia to get started).
@@ -55,7 +66,7 @@ I suggest you just fork the repo and send me a pull request once you have someth
 you would like to share. If you really are into it and want to build up a team to
 collaborate on this repo, just drop me a line and we'll figure it out.
 
-## The rationale
+## The rationale behind pyparsers
 I have decided to develop pyparsers as I wasn't happy with  the use of `pyparsing`
 which is the de facto standard library to develop DSLs with python. In particular,
 I didn't like the fact that it takes you quite a bit of reading and learning
