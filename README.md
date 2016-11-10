@@ -34,7 +34,8 @@ _**TODO**_
 ### API Reference
 As announced in the introduction, pyparsers makes its best to require no learning
 from your side. However, it wouldn't be a library if there was absolutely _no api_
-you could learn.
+you could learn. A full documentation of the API can be found [here](./doc/build/html/index.html).
+
 _**TODO**_
 
 ## Installation

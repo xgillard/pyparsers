@@ -1,0 +1,417 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>PyParsers Reference &#8212; PyParsers 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="top" title="PyParsers 1.0 documentation" href="index.html" />
+    <link rel="prev" title="PyParsers" href="index.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="index.html">
+          <span>PyParsers 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>PyParsers Reference</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        «&#160;&#160;<a href="index.html">PyParsers</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <div class="section" id="pyparsers-reference">
+<span id="pyparsers-api"></span><h1>PyParsers Reference<a class="headerlink" href="#pyparsers-reference" title="Permalink to this headline">¶</a></h1>
+<span class="target" id="module-pyparsers"></span><p>This module contains the core of the pyparsers micro framework to develop DSLs
+with python (this is actually the only file you&#8217;ll need to get started:its truly micro).</p>
+<p>The objective of the framework is fairly simple: let you develop a parser/interpreter
+for the grammar of your choice the way <em>YOU</em> think <em>YOU</em> would express the grammar.
+Therefore, it also strives to be minimalist and provide a few powerful abstractions
+to let you get started without having to go through the burden of learning yet
+an other parsers engine.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Conceptually, this library was inspired by the Scala parsers library.</p>
+</div>
+<p>Author: X. Gillard</p>
+<dl class="class">
+<dt id="pyparsers.Failure">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">Failure</code><span class="sig-paren">(</span><em>pos</em>, <em>reason</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Failure"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Failure" title="Permalink to this definition">¶</a></dt>
+<dd><p>A parse result encapsulating the case where the stream of token couldn&#8217;t be parsed</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.ParseResult">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">ParseResult</code><span class="sig-paren">(</span><em>pos</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the abstract class that describes the kind of objects to be returned by the parser apis.</p>
+<dl class="method">
+<dt id="pyparsers.ParseResult.position">
+<code class="descname">position</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult.position"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult.position" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the position in the stream of tokens up to which this result accounts for.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.ParseResult.reason">
+<code class="descname">reason</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult.reason"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult.reason" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the reason explaining why this parse has failed</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.ParseResult.success">
+<code class="descname">success</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult.success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult.success" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">True iff this result represent a successful parse</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.ParseResult.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult.transform" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">an other parse result equivalent to this one but where <cite>action</cite> has been applied to the value</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This has an effect only in the case where the result is success</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.ParseResult.value">
+<code class="descname">value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#ParseResult.value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.ParseResult.value" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">the value (ast node) parsed.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.Parser">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">Parser</code><span class="sig-paren">(</span><em>fn</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>An actual parser object that can be combined with some other parser to build more advanced
+grammars</p>
+<dl class="method">
+<dt id="pyparsers.Parser.action">
+<code class="descname">action</code><span class="sig-paren">(</span><em>action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Parser.action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Parser.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the internal action of the parser to use <cite>action</cite> instead.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.Parser.alt">
+<code class="descname">alt</code><span class="sig-paren">(</span><em>other</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Parser.alt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Parser.alt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines this parser with an other one to return a new parser that recognizes either this content
+or the one from the other</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.Parser.then">
+<code class="descname">then</code><span class="sig-paren">(</span><em>other</em>, <em>action=&lt;function Parser.&lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Parser.then"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Parser.then" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combines this parser with an other one to return a new parser that recognizes this content followed
+by the content recognized by the other parser</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.Success">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">Success</code><span class="sig-paren">(</span><em>pos</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Success"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Success" title="Permalink to this definition">¶</a></dt>
+<dd><p>A parse result encapsulating the case where a subsequence of tokens has correctly been parsed</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.TokenStream">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">TokenStream</code><span class="sig-paren">(</span><em>tokenizer</em>, <em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#TokenStream"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.TokenStream" title="Permalink to this definition">¶</a></dt>
+<dd><p>A stream of token implemented as a thin wrapper around a list of element.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Although you might want to implement an other (ie. more memory efficient)
+TokenStream, you should make sure an implementation of the __hash__
+method as well as some of the methods from the container protocol are
+available. This way, you should be able to make sure all the parsers defined
+in the library (or the ones you define) are interoperatable with your new
+token stream implementation.</p>
+</div>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.Tokenizer">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">Tokenizer</code><span class="sig-paren">(</span><em>whitespace='\s'</em>, <em>punctuation='$^'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Tokenizer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Tokenizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>A configurable tokenizer that lets you decide what should be considered whitespace
+(whitespaces are dropped) and what should be considered punctuation (kept).</p>
+<dl class="method">
+<dt id="pyparsers.Tokenizer.punctuation">
+<code class="descname">punctuation</code><span class="sig-paren">(</span><em>*ops</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Tokenizer.punctuation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Tokenizer.punctuation" title="Permalink to this definition">¶</a></dt>
+<dd><p>The &#8216;punctuation&#8217; of the language (may connect two other tokens)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.Tokenizer.tokenize">
+<code class="descname">tokenize</code><span class="sig-paren">(</span><em>text</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Tokenizer.tokenize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Tokenizer.tokenize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tokenizes the given text to a stream (list) of tokens where punctuation is taken into account</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyparsers.Tokenizer.whitespace">
+<code class="descname">whitespace</code><span class="sig-paren">(</span><em>*expr</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#Tokenizer.whitespace"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.Tokenizer.whitespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>What is considered blank text</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyparsers.VariadicActionParser">
+<em class="property">class </em><code class="descclassname">pyparsers.</code><code class="descname">VariadicActionParser</code><span class="sig-paren">(</span><em>rule</em>, <em>action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#VariadicActionParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.VariadicActionParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>A parser implementation that accepts variadic actions. That is to say, a parser
+producing a list or tuple that will be broken down to several parts before being
+passed to the action function.</p>
+<p>The typical use for this class lies in the implementation of the <cite>sequence</cite>: as
+every other parser builder, it returns a parser whose action can be parameterized
+but it makes sure that the given action receives a series of arguments rather than
+a list.</p>
+<dl class="method">
+<dt id="pyparsers.VariadicActionParser.action">
+<code class="descname">action</code><span class="sig-paren">(</span><em>action</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#VariadicActionParser.action"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.VariadicActionParser.action" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces the internal action and makes sure the action is called with args
+instead of a list.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.identity">
+<code class="descclassname">pyparsers.</code><code class="descname">identity</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#identity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function that does nothing (the default parse action)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.leftrec">
+<code class="descclassname">pyparsers.</code><code class="descname">leftrec</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#leftrec"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.leftrec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that activates the packrat left recursion support for this function.
+.. Note:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">This</span> <span class="n">implementation</span> <span class="ow">is</span> <span class="n">based</span> <span class="n">on</span> <span class="n">the</span> <span class="n">paper</span> <span class="n">by</span> <span class="n">Warth</span><span class="p">,</span> <span class="n">Douglass</span> <span class="ow">and</span> <span class="n">Millstein</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.list_of">
+<code class="descclassname">pyparsers.</code><code class="descname">list_of</code><span class="sig-paren">(</span><em>rule</em>, <em>sep='</em>, <em>'</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#list_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.list_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser for the case when you want to parse a list of items
+separated by a token (or rule) of your choice.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The parse list has <em>necessarily</em> the following structure:
+rule sep rule sep rule sep ... rule</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Given that it tries to recognise a list of items separated with some
+given separator, <em>an empty list will be rejected with a Failure</em>.</p>
+</div>
+<p>Although many other implementations are possible, this feature was included
+simply because parsing lists of items is a very common use case. Therefore
+it was considered useful to free developers from developing their own
+list parsing utility function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>rule</strong> &#8211; the rule parsing items in the list</li>
+<li><strong>sep</strong> &#8211; the rule describing the separation between items</li>
+<li><strong>action</strong> &#8211; the action to be applied on the parsed list of elements</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.memoize">
+<code class="descclassname">pyparsers.</code><code class="descname">memoize</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#memoize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.memoize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decorator that memoizes the results of the function calls.
+This is pretty useful if you intend to implement a packrat parser.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.one_of">
+<code class="descclassname">pyparsers.</code><code class="descname">one_of</code><span class="sig-paren">(</span><em>*enumerated</em>, <em>*</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#one_of"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.one_of" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser that recognizes one of the specified given values
+:param enumerated: the list of the values recognized by this parser.
+:param action: the action applied to the parsed token</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.optional">
+<code class="descclassname">pyparsers.</code><code class="descname">optional</code><span class="sig-paren">(</span><em>rule</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#optional"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.optional" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser that possibly recognizes an optional string</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>rule</strong> &#8211; the rule to be possibly matched</li>
+<li><strong>action</strong> &#8211; the action to be applied on the result</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a parser that recognises <cite>rule</cite> 0 or one time.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.parse_all">
+<code class="descclassname">pyparsers.</code><code class="descname">parse_all</code><span class="sig-paren">(</span><em>text</em>, <em>axiom</em>, <em>tokenizer=&lt;pyparsers.Tokenizer object&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#parse_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.parse_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to parse <em>all</em> the text of the given input text
+:param text: the text to be parsed
+:param axiom: the axiom (base rule of the derivation) that generates the root of the ast
+:param tokenizer: an optional tokenizer customized to your needs
+:return: the value corresponding to a successful parse of the text
+:raises: an exception if not all text could be parsed</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.parser">
+<code class="descclassname">pyparsers.</code><code class="descname">parser</code><span class="sig-paren">(</span><em>fn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a function to make it a parser (useful to implement recursive call)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.regex">
+<code class="descclassname">pyparsers.</code><code class="descname">regex</code><span class="sig-paren">(</span><em>pattern</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#regex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.regex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser that recognizes the given regex.
+:param pattern: pattern recognized by this parser.
+:param action: the action applied to the parsed result</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.repeat">
+<code class="descclassname">pyparsers.</code><code class="descname">repeat</code><span class="sig-paren">(</span><em>repeated</em>, <em>min_occurs=0</em>, <em>max_occurs=inf</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#repeat"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.repeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser for a rule that can be repeated.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>repeated</strong> &#8211; the rule that can happen many times</li>
+<li><strong>action</strong> &#8211; the function that receives the <em>list</em> of inputs as param and treats them all.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a parse result containing the processed output of the many results of <cite>repeated</cite></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.sequence">
+<code class="descclassname">pyparsers.</code><code class="descname">sequence</code><span class="sig-paren">(</span><em>*parsers</em>, <em>*</em>, <em>action=&lt;function &lt;lambda&gt;&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#sequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.sequence" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a composite parser for a sequence of tokens.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>parsers</strong> &#8211; a sequence of parsers that must be recognized</li>
+<li><strong>action</strong> &#8211; an action to be applied to the sequence of outputs recognized by the parsers.
+(note: one param per recognized value)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">a parse result containing action( <a href="#id1"><span class="problematic" id="id2">*</span></a>( <a href="#id3"><span class="problematic" id="id4">*</span></a>parsers.value() ) ).
+(In case the result is a failure, action is obviously not applied)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyparsers.text">
+<code class="descclassname">pyparsers.</code><code class="descname">text</code><span class="sig-paren">(</span><em>text</em>, <em>action=&lt;function identity&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pyparsers.html#text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyparsers.text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a parser that recognizes the given text (and only that)
+:param text: the text being recognized
+:param action: the action applied to the parsed token</p>
+</dd></dl>
+
+</div>
+
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        «&#160;&#160;<a href="index.html">PyParsers</a>
+        &#160;&#160;::&#160;&#160;
+        <a class="uplink" href="index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, X. Gillard.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>

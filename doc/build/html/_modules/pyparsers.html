@@ -1,0 +1,654 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>pyparsers &#8212; PyParsers 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/haiku.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="top" title="PyParsers 1.0 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+      <div class="header" role="banner"><h1 class="heading"><a href="../index.html">
+          <span>PyParsers 1.0 documentation</span></a></h1>
+        <h2 class="heading"><span>pyparsers</span></h2>
+      </div>
+      <div class="topnav" role="navigation" aria-label="top navigation">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+      <div class="content">
+        
+        
+  <h1>Source code for pyparsers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">This module contains the core of the pyparsers micro framework to develop DSLs</span>
+<span class="sd">with python (this is actually the only file you&#39;ll need to get started:its truly micro).</span>
+
+<span class="sd">The objective of the framework is fairly simple: let you develop a parser/interpreter</span>
+<span class="sd">for the grammar of your choice the way *YOU* think *YOU* would express the grammar.</span>
+<span class="sd">Therefore, it also strives to be minimalist and provide a few powerful abstractions</span>
+<span class="sd">to let you get started without having to go through the burden of learning yet</span>
+<span class="sd">an other parsers engine.</span>
+
+<span class="sd">.. Note::</span>
+<span class="sd">    Conceptually, this library was inspired by the Scala parsers library.</span>
+
+<span class="sd">Author: X. Gillard</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="k">import</span> <span class="n">abstractmethod</span>
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># Tokenization</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="TokenStream"><a class="viewcode-back" href="../pyparsers.html#pyparsers.TokenStream">[docs]</a><span class="k">class</span> <span class="nc">TokenStream</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A stream of token implemented as a thin wrapper around a list of element.</span>
+
+<span class="sd">    .. Note::</span>
+<span class="sd">        Although you might want to implement an other (ie. more memory efficient)</span>
+<span class="sd">        TokenStream, you should make sure an implementation of the __hash__</span>
+<span class="sd">        method as well as some of the methods from the container protocol are</span>
+<span class="sd">        available. This way, you should be able to make sure all the parsers defined</span>
+<span class="sd">        in the library (or the ones you define) are interoperatable with your new</span>
+<span class="sd">        token stream implementation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tokens</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. Warning::</span>
+<span class="sd">            IMPLEMENTATION IS MANDATORY</span>
+<span class="sd">        :returns: the pos-th token in the stream</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tokens</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning:: -- IMPLEMENTATION IS MANDATORY --</span>
+<span class="sd">        :returns: the length of the stream</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tokens</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning:: -- IMPLEMENTATION IS FACULTATIVE --</span>
+<span class="sd">        :returns: True iff the token is part of the stream</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">token</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tokens</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        .. warning:: -- IMPLEMENTATION IS FACULTATIVE --</span>
+<span class="sd">        Iterates over the stream of tokens</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tokens</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Tokenizer"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Tokenizer">[docs]</a><span class="k">class</span> <span class="nc">Tokenizer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A configurable tokenizer that lets you decide what should be considered whitespace</span>
+<span class="sd">    (whitespaces are dropped) and what should be considered punctuation (kept).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">whitespace</span> <span class="o">=</span> <span class="s2">&quot;\s&quot;</span><span class="p">,</span> <span class="n">punctuation</span><span class="o">=</span><span class="s2">&quot;$^&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_whitespace</span> <span class="o">=</span> <span class="n">whitespace</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_punctuation</span><span class="o">=</span> <span class="n">punctuation</span> <span class="c1"># by default, no punctuation is ever matched</span>
+
+<div class="viewcode-block" id="Tokenizer.whitespace"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Tokenizer.whitespace">[docs]</a>    <span class="k">def</span> <span class="nf">whitespace</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">expr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;What is considered blank text&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_whitespace</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Tokenizer.punctuation"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Tokenizer.punctuation">[docs]</a>    <span class="k">def</span> <span class="nf">punctuation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">ops</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The &#39;punctuation&#39; of the language (may connect two other tokens)&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_punctuation</span> <span class="o">=</span> <span class="s2">&quot;|&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="Tokenizer.tokenize"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Tokenizer.tokenize">[docs]</a>    <span class="k">def</span> <span class="nf">tokenize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Tokenizes the given text to a stream (list) of tokens where punctuation is taken into account</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># split and drop whitspaces</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_whitespace</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="c1"># separate punctuation from the rest</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span> <span class="bp">self</span><span class="o">.</span><span class="n">_partition</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_punctuation</span><span class="p">,</span> <span class="n">token</span><span class="p">)</span> <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="p">]</span>
+        <span class="c1"># flatten</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span> <span class="n">x</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">tokens</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">a</span> <span class="p">]</span>
+        <span class="k">return</span> <span class="n">tokens</span></div>
+
+    <span class="k">def</span> <span class="nf">_partition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">punct</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Partitions a given string in a disjoint set of substrings where some substrings match the given</span>
+<span class="sd">        punctuation pattern (`punct`) and the rest doesn&#39;t</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">rest</span>   <span class="o">=</span> <span class="n">text</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">while</span> <span class="n">rest</span><span class="p">:</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">punct</span><span class="p">,</span> <span class="n">rest</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+                <span class="c1"># if there was something before, add it</span>
+                <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">rest</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()]</span> <span class="p">)</span>
+
+                <span class="c1"># add the match that was found</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">rest</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">():</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()]</span> <span class="p">)</span>
+                <span class="c1"># consider only what&#39;s left</span>
+                <span class="n">rest</span>    <span class="o">=</span> <span class="n">rest</span><span class="p">[</span><span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">():]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># add the remainder to the result</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">rest</span> <span class="p">)</span>
+                <span class="n">rest</span>    <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># Parsing</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="ParseResult"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult">[docs]</a><span class="k">class</span> <span class="nc">ParseResult</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the abstract class that describes the kind of objects to be returned by the parser apis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new instance remembering the position (:param pos:) in the stream of tokens up to</span>
+<span class="sd">        which the stream has been correctly parsed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span> <span class="o">=</span> <span class="n">pos</span>
+
+<div class="viewcode-block" id="ParseResult.position"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult.position">[docs]</a>    <span class="k">def</span> <span class="nf">position</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:return: the position in the stream of tokens up to which this result accounts for.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pos</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="ParseResult.success"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult.success">[docs]</a>    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:return: True iff this result represent a successful parse&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="ParseResult.value"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult.value">[docs]</a>    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:return: the value (ast node) parsed.&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="ParseResult.reason"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult.reason">[docs]</a>    <span class="k">def</span> <span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:return: the reason explaining why this parse has failed&quot;&quot;&quot;</span>
+        <span class="k">pass</span></div>
+
+    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="ParseResult.transform"><a class="viewcode-back" href="../pyparsers.html#pyparsers.ParseResult.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :return: an other parse result equivalent to this one but where `action` has been applied to the value</span>
+
+<span class="sd">        .. Note:: This has an effect only in the case where the result is success</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span></div></div>
+
+
+<div class="viewcode-block" id="Success"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Success">[docs]</a><span class="k">class</span> <span class="nc">Success</span><span class="p">(</span><span class="n">ParseResult</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A parse result encapsulating the case where a subsequence of tokens has correctly been parsed&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_val</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_val</span>
+
+    <span class="k">def</span> <span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">(),</span> <span class="n">action</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">())</span> <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Success(</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Two successful results are considered equal iff::</span>
+<span class="sd">            - both are instances of the `Success` class</span>
+<span class="sd">            - both ended their parse in the same position</span>
+<span class="sd">            - both yield recognised the same value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__can_equal</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">__can_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">value</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A reimplementation of the `__hash__` magic method which is consistent with the equal</span>
+<span class="sd">        method defined above.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">17</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">41</span> <span class="o">*</span> <span class="n">hashcode</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">41</span> <span class="o">*</span> <span class="n">hashcode</span> <span class="o">+</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">hashcode</span>
+
+    <span class="k">def</span> <span class="nf">__can_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility function that returns True iff both objects can (potentially) be considered equal (typewise).</span>
+<span class="sd">        The role of this function is to ensure that I cannot tell that I&#39;m equal to an instance of a subclass</span>
+<span class="sd">        of this class.</span>
+
+<span class="sd">        :see: http://www.artima.com/lejava/articles/equality.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Success</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Failure"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Failure">[docs]</a><span class="k">class</span> <span class="nc">Failure</span><span class="p">(</span><span class="n">ParseResult</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A parse result encapsulating the case where the stream of token couldn&#39;t be parsed&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos</span><span class="p">,</span> <span class="n">reason</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reason</span> <span class="o">=</span> <span class="n">reason</span>
+
+    <span class="k">def</span> <span class="nf">reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reason</span>
+
+    <span class="k">def</span> <span class="nf">success</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;Failure(</span><span class="si">{}</span><span class="s2">, </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Two successful results are considered equal iff::</span>
+<span class="sd">            - both are instances of the `Success` class</span>
+<span class="sd">            - both ended their parse in the same position</span>
+<span class="sd">            - both yield recognised the same value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__can_equal</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">__can_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">reason</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A reimplementation of the `__hash__` magic method which is consistent with the equal</span>
+<span class="sd">        method defined above.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">17</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">41</span> <span class="o">*</span> <span class="n">hashcode</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+        <span class="n">hashcode</span> <span class="o">=</span> <span class="mi">41</span> <span class="o">*</span> <span class="n">hashcode</span> <span class="o">+</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">hashcode</span>
+
+    <span class="k">def</span> <span class="nf">__can_equal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility function that returns True iff both objects can (potentially) be considered equal (typewise).</span>
+<span class="sd">        The role of this function is to ensure that I cannot tell that I&#39;m equal to an instance of a subclass</span>
+<span class="sd">        of this class.</span>
+
+<span class="sd">        :see: http://www.artima.com/lejava/articles/equality.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Failure</span><span class="p">)</span></div>
+
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># Utility actions</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="identity"><a class="viewcode-back" href="../pyparsers.html#pyparsers.identity">[docs]</a><span class="k">def</span> <span class="nf">identity</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A function that does nothing (the default parse action)&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">x</span></div>
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># The real parser thing !</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="Parser"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Parser">[docs]</a><span class="k">class</span> <span class="nc">Parser</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An actual parser object that can be combined with some other parser to build more advanced</span>
+<span class="sd">    grammars</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates a new object and remembers the function being decorated&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span>  <span class="o">=</span> <span class="n">fn</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">text</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_act</span> <span class="o">=</span> <span class="n">action</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Executes the underlying function&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">position</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;Reached end of token stream&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fn</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_act</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Parser.then"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Parser.then">[docs]</a>    <span class="k">def</span> <span class="nf">then</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">:</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combines this parser with an other one to return a new parser that recognizes this content followed</span>
+<span class="sd">        by the content recognized by the other parser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">sequence</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fn</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Parser.alt"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Parser.alt">[docs]</a>    <span class="k">def</span> <span class="nf">alt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Combines this parser with an other one to return a new parser that recognizes either this content</span>
+<span class="sd">        or the one from the other</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">other</span> <span class="o">=</span> <span class="n">other</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Parser</span><span class="p">)</span> <span class="k">else</span> <span class="n">Parser</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">choice</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Internal function to recognize either one or the other content&quot;&quot;&quot;</span>
+            <span class="n">me</span>  <span class="o">=</span> <span class="bp">self</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">me</span> <span class="k">if</span> <span class="n">me</span><span class="o">.</span><span class="n">success</span><span class="p">()</span> <span class="k">else</span> <span class="n">other</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+        <span class="c1"># The parser result</span>
+        <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">choice</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allows the sequential combination of parsers in a symbolic fashion&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">then</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__or__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Allows the alternative combination of parsers in a symbolic fashion&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">alt</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Parser.action"><a class="viewcode-back" href="../pyparsers.html#pyparsers.Parser.action">[docs]</a>    <span class="k">def</span> <span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the internal action of the parser to use `action` instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_act</span> <span class="o">=</span> <span class="n">action</span></div></div>
+
+
+<div class="viewcode-block" id="VariadicActionParser"><a class="viewcode-back" href="../pyparsers.html#pyparsers.VariadicActionParser">[docs]</a><span class="k">class</span> <span class="nc">VariadicActionParser</span><span class="p">(</span><span class="n">Parser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A parser implementation that accepts variadic actions. That is to say, a parser</span>
+<span class="sd">    producing a list or tuple that will be broken down to several parts before being</span>
+<span class="sd">    passed to the action function.</span>
+
+<span class="sd">    The typical use for this class lies in the implementation of the `sequence`: as</span>
+<span class="sd">    every other parser builder, it returns a parser whose action can be parameterized</span>
+<span class="sd">    but it makes sure that the given action receives a series of arguments rather than</span>
+<span class="sd">    a list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rule</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new instance and makes sure the action is called with args</span>
+<span class="sd">        instead of a list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">action</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">))</span>
+
+<div class="viewcode-block" id="VariadicActionParser.action"><a class="viewcode-back" href="../pyparsers.html#pyparsers.VariadicActionParser.action">[docs]</a>    <span class="k">def</span> <span class="nf">action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">action</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces the internal action and makes sure the action is called with args</span>
+<span class="sd">        instead of a list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#self._act = lambda x: action(*x)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">action</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">action</span><span class="p">(</span><span class="o">*</span><span class="n">x</span><span class="p">))</span></div></div>
+
+
+<span class="c1">#===============================================================================</span>
+<span class="c1"># Standard parsers (useful stuffs you might have done yourself)</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="text"><a class="viewcode-back" href="../pyparsers.html#pyparsers.text">[docs]</a><span class="k">def</span> <span class="nf">text</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser that recognizes the given text (and only that)</span>
+<span class="sd">    :param text: the text being recognized</span>
+<span class="sd">    :param action: the action applied to the parsed token</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="o">==</span> <span class="n">text</span> <span class="p">:</span>
+            <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="n">position</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;Expected </span><span class="si">{}</span><span class="s2"> instead of </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="one_of"><a class="viewcode-back" href="../pyparsers.html#pyparsers.one_of">[docs]</a><span class="k">def</span> <span class="nf">one_of</span><span class="p">(</span><span class="o">*</span><span class="n">enumerated</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser that recognizes one of the specified given values</span>
+<span class="sd">    :param enumerated: the list of the values recognized by this parser.</span>
+<span class="sd">    :param action: the action applied to the parsed token</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">]</span> <span class="ow">in</span> <span class="n">enumerated</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="n">position</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;Expecting one of the following tokens &quot;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">enumerated</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="regex"><a class="viewcode-back" href="../pyparsers.html#pyparsers.regex">[docs]</a><span class="k">def</span> <span class="nf">regex</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser that recognizes the given regex.</span>
+<span class="sd">    :param pattern: pattern recognized by this parser.</span>
+<span class="sd">    :param action: the action applied to the parsed result</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;^&quot;</span><span class="o">+</span><span class="n">pattern</span><span class="o">+</span><span class="s2">&quot;$&quot;</span><span class="p">,</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">position</span><span class="p">,</span> <span class="n">tokens</span><span class="p">[</span><span class="n">position</span><span class="p">])</span> <span class="k">if</span> <span class="n">results</span> <span class="k">else</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;Expecting a token matching &quot;</span><span class="o">+</span><span class="n">pattern</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="sequence"><a class="viewcode-back" href="../pyparsers.html#pyparsers.sequence">[docs]</a><span class="k">def</span> <span class="nf">sequence</span><span class="p">(</span><span class="o">*</span><span class="n">parsers</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="k">lambda</span> <span class="o">*</span><span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a composite parser for a sequence of tokens.</span>
+
+<span class="sd">    :param parsers: a sequence of parsers that must be recognized</span>
+<span class="sd">    :param action: an action to be applied to the sequence of outputs recognized by the parsers.</span>
+<span class="sd">           (note: one param per recognized value)</span>
+<span class="sd">    :return: a parse result containing action( *( *parsers.value() ) ).</span>
+<span class="sd">           (In case the result is a failure, action is obviously not applied)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parsers</span><span class="p">:</span>
+            <span class="c1"># try to parse</span>
+            <span class="n">current</span><span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">Parser</span><span class="p">)</span> <span class="k">else</span> <span class="n">p</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">current</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+            <span class="c1"># if its a failure, stop parsing</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">():</span>
+                <span class="k">return</span> <span class="n">result</span>
+            <span class="c1"># else update the result and the current position.</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">VariadicActionParser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="repeat"><a class="viewcode-back" href="../pyparsers.html#pyparsers.repeat">[docs]</a><span class="k">def</span> <span class="nf">repeat</span><span class="p">(</span><span class="n">repeated</span><span class="p">,</span> <span class="n">min_occurs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_occurs</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser for a rule that can be repeated.</span>
+
+<span class="sd">    :param repeated: the rule that can happen many times</span>
+<span class="sd">    :param action: the function that receives the *list* of inputs as param and treats them all.</span>
+<span class="sd">    :return: a parse result containing the processed output of the many results of `repeated`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">repeated</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">repeated</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">repeated</span><span class="p">,</span> <span class="n">Parser</span><span class="p">)</span> <span class="k">else</span> <span class="n">repeated</span>
+
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="n">repeated</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+        <span class="k">while</span> <span class="n">current</span><span class="o">.</span><span class="n">success</span><span class="p">():</span>
+            <span class="n">position</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="o">.</span><span class="n">value</span><span class="p">())</span>
+
+            <span class="n">current</span> <span class="o">=</span> <span class="n">repeated</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+
+        <span class="n">res_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">res_len</span> <span class="o">&lt;</span> <span class="n">min_occurs</span> <span class="p">:</span>
+            <span class="k">return</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> occurred only </span><span class="si">{}</span><span class="s2"> times (minimum: </span><span class="si">{}</span><span class="s2">)&quot;</span>\
+                                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repeated</span><span class="p">,</span> <span class="n">res_len</span><span class="p">,</span> <span class="n">min_occurs</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="n">res_len</span> <span class="o">&gt;</span> <span class="n">max_occurs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Failure</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> occurred </span><span class="si">{}</span><span class="s2"> times (maximum: </span><span class="si">{}</span><span class="s2">)&quot;</span>\
+                                                    <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">repeated</span><span class="p">,</span> <span class="n">res_len</span><span class="p">,</span> <span class="n">max_occurs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Success</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="n">results</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="optional"><a class="viewcode-back" href="../pyparsers.html#pyparsers.optional">[docs]</a><span class="k">def</span> <span class="nf">optional</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser that possibly recognizes an optional string</span>
+
+<span class="sd">    :param rule: the rule to be possibly matched</span>
+<span class="sd">    :param action: the action to be applied on the result</span>
+<span class="sd">    :return: a parser that recognises `rule` 0 or one time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">rule</span> <span class="o">=</span> <span class="n">parser</span><span class="p">(</span><span class="n">rule</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">Parser</span><span class="p">)</span> <span class="k">else</span> <span class="n">rule</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">rule</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span><span class="p">()</span> <span class="k">else</span> <span class="n">Success</span><span class="p">(</span><span class="n">position</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="list_of"><a class="viewcode-back" href="../pyparsers.html#pyparsers.list_of">[docs]</a><span class="k">def</span> <span class="nf">list_of</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="n">identity</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generates a parser for the case when you want to parse a list of items</span>
+<span class="sd">    separated by a token (or rule) of your choice.</span>
+
+<span class="sd">    .. Note::</span>
+<span class="sd">        The parse list has *necessarily* the following structure:</span>
+<span class="sd">        rule sep rule sep rule sep ... rule</span>
+
+<span class="sd">    .. Example::</span>
+<span class="sd">        list_of( regex(&quot;[a-z]+&quot;) ) will recognise sequence of tokens like</span>
+<span class="sd">        `a, b, c` but not like `a, b, c, ` or `a b c`</span>
+
+<span class="sd">    .. Note::</span>
+<span class="sd">        Given that it tries to recognise a list of items separated with some</span>
+<span class="sd">        given separator, *an empty list will be rejected with a Failure*.</span>
+
+<span class="sd">    Although many other implementations are possible, this feature was included</span>
+<span class="sd">    simply because parsing lists of items is a very common use case. Therefore</span>
+<span class="sd">    it was considered useful to free developers from developing their own</span>
+<span class="sd">    list parsing utility function.</span>
+
+<span class="sd">    :param rule: the rule parsing items in the list</span>
+<span class="sd">    :param sep: the rule describing the separation between items</span>
+<span class="sd">    :param action: the action to be applied on the parsed list of elements</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">do_parse</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="n">leading</span> <span class="o">=</span> <span class="n">repeat</span><span class="p">(</span> <span class="n">sequence</span><span class="p">(</span> <span class="n">rule</span><span class="p">,</span> <span class="n">sep</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span><span class="n">_</span><span class="p">:</span> <span class="n">x</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">the_pars</span><span class="o">=</span> <span class="n">leading</span><span class="o">.</span><span class="n">then</span><span class="p">(</span><span class="n">rule</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">x</span><span class="o">+</span><span class="p">[</span><span class="n">y</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">the_pars</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">position</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">do_parse</span><span class="p">,</span> <span class="n">action</span><span class="p">)</span></div>
+
+<span class="c1">#===============================================================================</span>
+<span class="c1">#</span>
+<span class="c1">#===============================================================================</span>
+<div class="viewcode-block" id="memoize"><a class="viewcode-back" href="../pyparsers.html#pyparsers.memoize">[docs]</a><span class="k">def</span> <span class="nf">memoize</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator that memoizes the results of the function calls.</span>
+<span class="sd">    This is pretty useful if you intend to implement a packrat parser.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define the memoizing map if needed</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">&quot;__memo&quot;</span><span class="p">):</span>
+        <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Decorate the function</span>
+    <span class="k">def</span> <span class="nf">memoized</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span> <span class="p">:</span>
+            <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="c1"># Return the decorated function</span>
+    <span class="k">return</span> <span class="n">memoized</span></div>
+
+<div class="viewcode-block" id="leftrec"><a class="viewcode-back" href="../pyparsers.html#pyparsers.leftrec">[docs]</a><span class="k">def</span> <span class="nf">leftrec</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Decorator that activates the packrat left recursion support for this function.</span>
+<span class="sd">    .. Note::</span>
+<span class="sd">        This implementation is based on the paper by Warth, Douglass and Millstein</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Define the memoizing map if needed</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">&quot;__memo&quot;</span><span class="p">):</span>
+        <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="c1"># Decorate the function</span>
+    <span class="k">def</span> <span class="nf">memoized</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span> <span class="p">:</span>
+            <span class="n">_marker</span>        <span class="o">=</span> <span class="n">Failure</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Prevent infinite recursion&quot;</span><span class="p">)</span>
+            <span class="n">_marker</span><span class="o">.</span><span class="n">_is_LR</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">_marker</span>
+
+            <span class="n">result</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="c1"># do we need to grow the seed from left to right ?</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;_is_LR&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">_is_LR</span><span class="p">:</span>
+                <span class="c1"># LR is detected -&gt; we need to grow it out !</span>
+                <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">pos</span>            <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">position</span><span class="p">()</span>
+                    <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+                    <span class="n">ans</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="c1"># was it a failure (aka, is left recursion over ?)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">ans</span><span class="o">.</span><span class="n">success</span><span class="p">():</span>
+                        <span class="k">break</span>
+                    <span class="k">if</span> <span class="n">ans</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">pos</span><span class="p">:</span>
+                        <span class="k">break</span>
+                    <span class="c1"># else the seed has grown</span>
+                    <span class="n">result</span> <span class="o">=</span> <span class="n">ans</span>
+            <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="s1">&#39;_is_LR&#39;</span><span class="p">):</span>
+            <span class="c1"># this is a case of left recursion</span>
+            <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">_is_LR</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># anyway: when it is over, just return the parsed value !</span>
+        <span class="k">return</span> <span class="n">fn</span><span class="o">.</span><span class="n">__memo</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="c1"># Return the decorated function</span>
+    <span class="k">return</span> <span class="n">memoized</span></div>
+
+<div class="viewcode-block" id="parser"><a class="viewcode-back" href="../pyparsers.html#pyparsers.parser">[docs]</a><span class="k">def</span> <span class="nf">parser</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a function to make it a parser (useful to implement recursive call)&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">Parser</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="parse_all"><a class="viewcode-back" href="../pyparsers.html#pyparsers.parse_all">[docs]</a><span class="k">def</span> <span class="nf">parse_all</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">axiom</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">=</span><span class="n">Tokenizer</span><span class="p">()):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to parse *all* the text of the given input text</span>
+<span class="sd">    :param text: the text to be parsed</span>
+<span class="sd">    :param axiom: the axiom (base rule of the derivation) that generates the root of the ast</span>
+<span class="sd">    :param tokenizer: an optional tokenizer customized to your needs</span>
+<span class="sd">    :return: the value corresponding to a successful parse of the text</span>
+<span class="sd">    :raises: an exception if not all text could be parsed</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">axiom</span>        <span class="o">=</span> <span class="n">axiom</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axiom</span><span class="p">,</span> <span class="n">Parser</span><span class="p">)</span> <span class="k">else</span> <span class="n">parser</span><span class="p">(</span><span class="n">axiom</span><span class="p">)</span>
+    <span class="n">tokens</span>       <span class="o">=</span> <span class="n">TokenStream</span><span class="p">(</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="n">text</span> <span class="p">)</span>
+    <span class="n">parse_result</span> <span class="o">=</span> <span class="n">axiom</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+    <span class="c1"># Check possible failures</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parse_result</span><span class="o">.</span><span class="n">success</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;At </span><span class="si">{}</span><span class="s2"> : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parse_result</span><span class="o">.</span><span class="n">position</span><span class="p">(),</span> <span class="n">parse_result</span><span class="o">.</span><span class="n">reason</span><span class="p">()))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">parse_result</span><span class="o">.</span><span class="n">position</span><span class="p">()</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;At </span><span class="si">{}</span><span class="s2"> : Invalid suffix&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">parse_result</span><span class="o">.</span><span class="n">position</span><span class="p">()))</span>
+    <span class="c1"># Ok we&#39;re good, return the result</span>
+    <span class="k">return</span> <span class="n">parse_result</span><span class="o">.</span><span class="n">value</span><span class="p">()</span></div>
+</pre></div>
+
+      </div>
+      <div class="bottomnav" role="navigation" aria-label="bottom navigation">
+      
+        <p>
+        <a class="uplink" href="../index.html">Contents</a>
+        </p>
+
+      </div>
+
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2016, X. Gillard.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.4.8.
+    </div>
+  </body>
+</html>
