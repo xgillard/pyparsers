@@ -8,7 +8,7 @@ Therefore, it also strives to be minimalist and provide a few powerful abstracti
 to let you get started without having to go through the burden of learning yet
 an other parsers engine.
 
-Note::
+.. Note::
     Conceptually, this library was inspired by the Scala parsers library.
 
 Author: X. Gillard
@@ -22,47 +22,47 @@ from abc import abstractmethod
 class TokenStream:
     """
     A stream of token implemented as a thin wrapper around a list of element.
-     
-    Note::
+
+    .. Note::
         Although you might want to implement an other (ie. more memory efficient)
-        TokenStream, you should make sure an implementation of the __hash__ 
-        method as well as some of the methods from the container protocol are 
+        TokenStream, you should make sure an implementation of the __hash__
+        method as well as some of the methods from the container protocol are
         available. This way, you should be able to make sure all the parsers defined
-        in the library (or the ones you define) are interoperatable with your new 
+        in the library (or the ones you define) are interoperatable with your new
         token stream implementation.
     """
     def __init__(self, tokenizer, text):
         self._tokens = tokenizer.tokenize(text)
-        
+
     def __getitem__(self, pos):
         """
-        -- IMPLEMENTATION IS MANDATORY -- 
+        .. warning:: -- IMPLEMENTATION IS MANDATORY --
         :returns: the pos-th token in the stream
         """
         return self._tokens[pos]
-    
+
     def __len__(self):
         """
-        -- IMPLEMENTATION IS MANDATORY --
+        .. warning:: -- IMPLEMENTATION IS MANDATORY --
         :returns: the length of the stream
         """
         return len(self._tokens)
-    
+
     def __contains__(self, token):
         """
-        -- IMPLEMENTATION IS FACULTATIVE --
+        .. warning:: -- IMPLEMENTATION IS FACULTATIVE --
         :returns: True iff the token is part of the stream
         """
         return token in self._tokens
-    
+
     def __iter__(self):
         """
-        -- IMPLEMENTATION IS FACULTATIVE --
+        .. warning:: -- IMPLEMENTATION IS FACULTATIVE --
         Iterates over the stream of tokens
         """
         return iter( self._tokens )
-    
-    
+
+
 class Tokenizer:
     """
     A configurable tokenizer that lets you decide what should be considered whitespace
@@ -143,12 +143,12 @@ class ParseResult:
     def success(self):
         """:return: True iff this result represent a successful parse"""
         pass
-    
+
     @abstractmethod
     def value(self):
         """:return: the value (ast node) parsed."""
         pass
-    
+
     @abstractmethod
     def reason(self):
         """:return: the reason explaining why this parse has failed"""
@@ -159,7 +159,7 @@ class ParseResult:
         """
         :return: an other parse result equivalent to this one but where `action` has been applied to the value
 
-        Note:: This has an effect only in the case where the result is success
+        .. Note:: This has an effect only in the case where the result is success
         """
         pass
 
@@ -184,7 +184,7 @@ class Success(ParseResult):
 
     def __str__(self):
         return "Success({}, {})".format(self.position(), self.value())
-    
+
     def __eq__(self, other):
         """
         Two successful results are considered equal iff::
@@ -196,7 +196,7 @@ class Success(ParseResult):
             return False
         else:
             return self.position() == other.position() and self.value() == other.value()
-        
+
     def __hash__(self):
         """
         A reimplementation of the `__hash__` magic method which is consistent with the equal
@@ -205,17 +205,17 @@ class Success(ParseResult):
         hashcode = 17
         hashcode = 41 * hashcode + self.position()
         hashcode = 41 * hashcode + hash(self.value())
-        return hashcode  
-    
+        return hashcode
+
     def __can_equal(self, other):
         """
         Utility function that returns True iff both objects can (potentially) be considered equal (typewise).
         The role of this function is to ensure that I cannot tell that I'm equal to an instance of a subclass
-        of this class. 
-        
+        of this class.
+
         :see: http://www.artima.com/lejava/articles/equality.html
         """
-        return isinstance(other, Success) 
+        return isinstance(other, Success)
 
 
 class Failure(ParseResult):
@@ -238,7 +238,7 @@ class Failure(ParseResult):
 
     def __str__(self):
         return "Failure({}, {})".format(self.position(), self.reason())
-    
+
     def __eq__(self, other):
         """
         Two successful results are considered equal iff::
@@ -250,7 +250,7 @@ class Failure(ParseResult):
             return False
         else:
             return self.position() == other.position() and self.reason() == other.reason()
-        
+
     def __hash__(self):
         """
         A reimplementation of the `__hash__` magic method which is consistent with the equal
@@ -259,17 +259,17 @@ class Failure(ParseResult):
         hashcode = 17
         hashcode = 41 * hashcode + self.position()
         hashcode = 41 * hashcode + hash(self.reason())
-        return hashcode  
-    
+        return hashcode
+
     def __can_equal(self, other):
         """
         Utility function that returns True iff both objects can (potentially) be considered equal (typewise).
         The role of this function is to ensure that I cannot tell that I'm equal to an instance of a subclass
-        of this class. 
-        
+        of this class.
+
         :see: http://www.artima.com/lejava/articles/equality.html
         """
-        return isinstance(other, Failure) 
+        return isinstance(other, Failure)
 
 
 #===============================================================================
@@ -326,7 +326,7 @@ class Parser:
     def __or__(self, other):
         """Allows the alternative combination of parsers in a symbolic fashion"""
         return self.alt(other)
-    
+
     def action(self, action):
         """
         Updates the internal action of the parser to use `action` instead.
@@ -339,11 +339,11 @@ class VariadicActionParser(Parser):
     A parser implementation that accepts variadic actions. That is to say, a parser
     producing a list or tuple that will be broken down to several parts before being
     passed to the action function.
-    
+
     The typical use for this class lies in the implementation of the `sequence`: as
     every other parser builder, it returns a parser whose action can be parameterized
     but it makes sure that the given action receives a series of arguments rather than
-    a list.   
+    a list.
     """
     def __init__(self, rule, action):
         """
@@ -351,7 +351,7 @@ class VariadicActionParser(Parser):
         instead of a list.
         """
         super().__init__(rule, lambda x: action(*x))
-    
+
     def action(self, action):
         """
         Replaces the internal action and makes sure the action is called with args
@@ -474,26 +474,26 @@ def optional(rule, action=identity):
 
 def list_of(rule, sep=",", action=identity):
     """
-    Generates a parser for the case when you want to parse a list of items 
+    Generates a parser for the case when you want to parse a list of items
     separated by a token (or rule) of your choice.
-    
-    Note:: 
+
+    .. Note::
         The parse list has *necessarily* the following structure:
         rule sep rule sep rule sep ... rule
-    
-    Example::
+
+    .. Example::
         list_of( regex("[a-z]+") ) will recognise sequence of tokens like
         `a, b, c` but not like `a, b, c, ` or `a b c`
-        
-    Note::
+
+    .. Note::
         Given that it tries to recognise a list of items separated with some
         given separator, *an empty list will be rejected with a Failure*.
-    
+
     Although many other implementations are possible, this feature was included
     simply because parsing lists of items is a very common use case. Therefore
-    it was considered useful to free developers from developing their own 
+    it was considered useful to free developers from developing their own
     list parsing utility function.
-    
+
     :param rule: the rule parsing items in the list
     :param sep: the rule describing the separation between items
     :param action: the action to be applied on the parsed list of elements
@@ -509,7 +509,7 @@ def list_of(rule, sep=",", action=identity):
 #===============================================================================
 def memoize(fn):
     """
-    Decorator that memoizes the results of the function calls. 
+    Decorator that memoizes the results of the function calls.
     This is pretty useful if you intend to implement a packrat parser.
     """
     # Define the memoizing map if needed
@@ -527,7 +527,7 @@ def memoize(fn):
 def leftrec(fn):
     """
     Decorator that activates the packrat left recursion support for this function.
-    Note:: 
+    .. Note::
         This implementation is based on the paper by Warth, Douglass and Millstein
     """
     # Define the memoizing map if needed
@@ -539,8 +539,8 @@ def leftrec(fn):
         if not key in fn.__memo :
             _marker        = Failure(-1, "Prevent infinite recursion")
             _marker._is_LR = False
-            fn.__memo[key] = _marker 
-            
+            fn.__memo[key] = _marker
+
             result = fn(*args, *kwargs)
             # do we need to grow the seed from left to right ?
             if hasattr(fn.__memo[key], '_is_LR') and fn.__memo[key]._is_LR:
@@ -556,11 +556,11 @@ def leftrec(fn):
                         break
                     # else the seed has grown
                     result = ans
-            fn.__memo[key] = result         
+            fn.__memo[key] = result
         elif hasattr(fn.__memo[key], '_is_LR'):
             # this is a case of left recursion
             fn.__memo[key]._is_LR = True
-        # anyway: when it is over, just return the parsed value ! 
+        # anyway: when it is over, just return the parsed value !
         return fn.__memo[key]
     # Return the decorated function
     return memoized
